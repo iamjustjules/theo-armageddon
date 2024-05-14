@@ -14,29 +14,41 @@ Deliverables.
 3) Screenshots showing how the HQ homepage was accessed from both the Americas and Asia Pacific. 
 
 
-“00-provider.tf”
-- Provider Configuration: Specifies that Google Cloud is the provider for the infrastructure resources. The “credentials” field refers to the JSON key file that contains your service account key, which Terraform will use to authenticate with Google Cloud.
-- Project and Region: Sets default values for the project and region, which apply to all resources unless explicitly overridden. This simplifies resource definitions by not needing to specify these values repeatedly.
-- Required Providers: This block specifies the version constraints for the Google Cloud provider, ensuring that Terraform uses an appropriate version of the provider that's compatible with your code.
+Here's how each block works:
 
-“01-main.tf”
-- Virtual Private Cloud (VPC) and Subnets:
-- European VPC: Defines a VPC in Europe without auto-created subnets, allowing for manual subnet management.
-- European Subnet: Specifies a subnet within the European VPC with a specific CIDR block and enables private Google access, which allows resources in the subnet to communicate with Google services without public IP addresses.
-- American VPCs: Similar to the European setup, two VPCs are defined for America, again without auto-created subnets.
-- American Subnets: Each American VPC has a dedicated subnet, defined with specific CIDR blocks.
-- Asia Pacific VPC and Subnet: Follows the same pattern as other regions, with a VPC and a specific subnet for the Asia Pacific region.
+00-providers.tf
+This sets up the providers needed:
+- Google Provider: Used to manage most GCP resources.
+- Google Beta Provider: Necessary for resources that require features available only in the Google provider's beta versions.
 
-“02-variables.tf”
-- Variables: Defines variables “project_id”, “european_region”, “american_region1”, “american_region2”, and “asia_pacific_region”. These allow for dynamic input, which are used across the configuration to specify the deployment settings like region-specific resources.
+01-main.tf
+This is where resources are created:
+- Virtual Private Cloud (VPC) Resources: It sets up VPCs in Europe, America, and Asia-Pacific with specific CIDR blocks. Each is set to a specific region without automatically creating subnetworks, allowing manual subnetwork setup for specific needs.
+- Subnetworks: A subnetwork is defined with a CIDR range and regional setup. This allows network management and segmentation.
+- Secret Management: Utilizes the secrets management to get secrets from GCP. This securely manages sensitive configurations.
+- VPN and Firewall: This secures connections and protections against unauthorized access.
 
-“03-outputs.tf”
-- Outputs: Outputs are used to easily access important information about the resources once Terraform applies the configurations. For instance:
-- “european_vpc_id” and similar outputs for other regions provide the ID of the created VPCs, which can be useful for debugging, cross-referencing, or as inputs to other tools or scripts.
-- Subnet ranges like “european_subnet_range” provide CIDR blocks of each created subnet, useful for network planning and management.
+02-variables.tf
+- Variables like “project_id”, “region”, and regional identifiers are used in the “01-main.tf” without changing core logic.
 
-Interaction Among Blocks
-- Resource Definitions and Variable Usage: Each resource block in “01-main.tf” uses variables from “02-variables.tf” to specify configurations like region, which makes the code reusable and adaptable to different environments without changing the core logic.
-- Provider and Resource Dependency: The provider configuration in “00-provider.tf” must successfully authenticate and be configured correctly for the resources in “01-main.tf” to be provisioned in GCP.
-- Outputs and Resource Attributes: The outputs in “03-outputs.tf” extract attributes from the resources defined in “01-main.tf”, such as VPC and subnet IDs or CIDR ranges. These outputs can be critical for further automation or integration with other systems.
-This setup ensures a modular, understandable, and maintainable infrastructure-as-code environment where changes to the infrastructure can be managed with minimal adjustments to the code, primarily through the variables file or by updating resource definitions in “01-main.tf”. Each component plays a specific role and interacts with others through the use of shared variables and attributes, reflecting a well-structured Terraform project.
+03-outputs.tf
+Provides outputs after Terraform execution:
+- Outputs like VPC IDs and subnet ranges are for understanding the deployed environment.
+- The “secret_value” output ensures the secret fetched can be used securely and is marked as sensitive to prevent it from being displayed.
+
+secrets.js
+This is a Node.js script, not directly part of Terraform but related to managing secrets.
+- Purpose: Demonstrates how to programmatically access secrets from Google Cloud Secrets Manager using the Google Cloud Node.js client library.
+- Functionality: Connects to Secrets Manager, retrieves a secret, and logs its value. It’s an example of how application code might interact with secrets, separate from Terraform.
+
+Interaction Among Files
+- “00-providers.tf” configures how Terraform interacts with GCP.
+- “01-main.tf” holds infrastructure components defined and managed.
+- “02-variables.tf” provides flexibility and customization to the configurations.
+- “03-outputs.tf” details insights and access points post-deployment.
+- “secrets.js” is a practical application outside of Terraform but within the setup designed by the configuration.
+
+Features
+- Security: The Terraform setup ensures that the bucket contents are publicly readable, suitable for a static website. It also uses Google Cloud Secrets Manager for sensitive data.
+- Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
+- Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
