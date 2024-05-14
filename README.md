@@ -11,58 +11,43 @@ Task 1
     - Output file must show the public link
     - Must have an index.html file within
 
-Create a terraform providers.tf, main.tf, variables.tf, and outputs.tf with a publicly accessible bucket in GCP with an "index.html" file, "Jandk.png" file, and "JandN.jpg" file uploaded to the bucket in us-central1 and have the output show the public URL for index.html file that also displays the parameters of the bucket
+These files work together individually and together:
 
-Here's an explanation of each block in the Terraform script:
+00-providers.tf
+This configures the providers needed. It specifies both the standard “google” provider and the “google-beta” provider, needed for accessing beta features.
+- Provider Setup: Includes credentials, project ID, and region.
+- ”required_providers” Block: Ensures that the correct provider versions are used.
+- Purpose: Sets up the environment for Terraform to interact with Google Cloud resources.
 
-Resource Block: “google_storage_bucket” "public_bucket"
-Description:
-- This block creates a Google Cloud Storage bucket with specified attributes.
-- “name”: Uses the variable “var.bucket_name” to set the bucket's name.
-- “location”: Sets the bucket's location using “var.region”.
-- “storage_class”: Sets the storage class to "STANDARD", which is a cost-effective storage option for data accessed less frequently.
-- “uniform_bucket_level_access”: Enables uniform bucket-level access, simplifying permission management by removing object-level ACLs.
-- “website”: Configures the bucket as a static website. “main_page_suffix” specifies the main page (index.html) and “not_found_page” specifies the error page (404.html) for requests to non-existing pages.
-- “cors”: Sets Cross-Origin Resource Sharing (CORS) rules allowing all domains (“*”) to perform “GET” and “HEAD” requests.
-Relation to Other Blocks:
-- It serves as the foundation for the “google_storage_bucket_iam_binding” and “google_storage_bucket_object” resources, providing the bucket context in which they operate.
+01-main.tf
+This is where the resources are defined.
+- Google Storage Bucket: Configures a Google Cloud Storage (GCS) bucket to host a static website (“index.html” and images). It sets up website configuration, CORS settings, and enables uniform bucket-level access for better security.
+- IAM Binding: Grants public read access to the objects in the bucket, making the website publicly accessible.
+- Storage Bucket Objects: Defines objects like “index.html”, “Jandk.png”, and “JandN.jpg” to be uploaded to the GCS bucket.
+- Secret Manager Data Source: Fetches a secret from Google Cloud Secrets Manager, showing how to integrate secret management within Terraform.
 
-Resource Block: “google_storage_bucket_iam_binding” "public_read"
-Description:
-- This block assigns the IAM role of “objectViewer” to “allUsers”, making the bucket's contents publicly readable.
-- “bucket”: Specifies the bucket name using “google_storage_bucket.public_bucket.name”, linking it to the previously defined bucket resource.
-- “role”: Assigns the “storage.objectViewer” role, which allows users to view objects stored in the bucket.
-- “members”: Specifies “allUsers”, indicating that anyone on the internet can access the objects.
+02-variables.tf
+Defines variables used.
+- Variables: Include “project_id”, “region”, “credentials”, and “bucket_name”. These are placeholders that are replaced with actual values during runtime, providing flexibility and reusability of the Terraform templates.
 
-Relation to Other Blocks:
-- It directly modifies the IAM policy of the “google_storage_bucket.public_bucket” to allow public access, crucial for serving the static website content globally.
+03-outputs.tf
+Defines output variables.
+- Website URL: Outputs the URL where the static website is hosted.
+- Secret Value: Outputs the value of the secret fetched from Google Cloud Secrets Manager, marked as sensitive to prevent it from being displayed in logs or console output.
 
-Resource Block: “google_storage_bucket_object” "index"
-Description:
-- Creates an object “index.html” within the bucket.
-- “name”: Sets the object's name to "index.html".
-- “bucket”: Links to the “google_storage_bucket.public_bucket” to define where the object should reside.
-- “content”: Defines the HTML content of the webpage.
-- “content_type”: Specifies the MIME type as “text/html”.
-Relation to Other Blocks:
-- It adds content to the bucket configured for static website hosting. This object is what will be served as the main page due to the website configuration in the bucket resource.
+secrets.js
+This is a Node.js script, not directly part of Terraform but related to managing secrets.
+- Purpose: Demonstrates how to programmatically access secrets from Google Cloud Secrets Manager using the Google Cloud Node.js client library.
+- Functionality: Connects to Secrets Manager, retrieves a secret, and logs its value. It’s an example of how application code might interact with secrets, separate from Terraform.
 
-Variable Blocks: “project_id”, “region”, “bucket_name”
-Description:
-- These blocks define variables that are used throughout the Terraform configuration.
-- “project_id”: Specifies the Google Cloud project ID.
-- “region”: Specifies the region where resources will be created.
-- “bucket_name”: Specifies the name of the bucket to be created.
-Relation to Other Blocks:
-- These variables are used to configure properties in the “google_storage_bucket” resource and can be referenced throughout the configuration to ensure consistency and reusability of values.
+How They Work Together
+- Terraform Files: Set up infrastructure (GCS bucket, objects, IAM policies) and securely fetch secrets as part of the infrastructure setup.
+- Node.js Script: Represents a separate application layer or operational script used for secret management or dynamic configuration during runtime.
 
-Output Block: “bucket_url”
-Description:
-- This block generates an output that displays the URL of the publicly accessible bucket.
-- “value”: Constructs the URL using the bucket's name.
-Relation to Other Blocks:
-- Provides a user-friendly way to access the URL of the bucket created and configured by the earlier resource blocks, making it easy to verify and access the deployed resources.
-Each block plays a distinct role in configuring the storage, accessibility, and interactivity of resources in your Google Cloud project. Together, they form a comprehensive Terraform configuration for deploying a static website hosted on a Google Cloud Storage bucket.
+Features
+- Security: The Terraform setup ensures that the bucket contents are publicly readable, suitable for a static website. It also uses Google Cloud Secrets Manager for sensitive data.
+- Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
+- Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
 
 TASK2
 
@@ -78,36 +63,43 @@ Task 2
 
 
 Here's how each block works:
-
-00-provider.tf
-- Purpose: Sets up the Google Cloud provider necessary for managing resources on Google Cloud Platform (GCP).
-- Details: It specifies the project ID, region, and credentials file that Terraform will use to authenticate and interact with GCP. It also ensures that a specific version of the Google provider is used, aligning with best practices for reliable and predictable deployments.
+ 
+00-providers.tf
+This file configures the providers:
+- “google”: Used for most of the GCP resources.
+- “google-beta”: Used for accessing beta features or resources that are only available in the beta provider.  
+Both are configured with credentials, project ID, and region, so terraform can authenticate and interact with the project.
 
 01-main.tf
-- Google Storage Bucket: Configured to host a static website. “uniform_bucket_level_access” is enabled for simplified permission management, and a website configuration is provided to specify the main and error pages. CORS settings are configured to control cross-origin requests.
-- Public IAM Binding: Grants public read access to all objects in the specified bucket, making it usable as a public static website.
-- Storage Bucket Objects: Uploads “index.html” and images (“Jandk.png”, “JandN.jpg”) to the bucket, setting the correct content type for web hosting.
-- Google Compute Network and Subnet: Creates a VPC (“just_jules_vpc”) without auto-creating subnetworks, and a subnet within this VPC with a specified CIDR block.
-- Google Compute Instance: Sets up a virtual machine within the created subnet, using a predefined machine type and image. It configures a network interface connected to the subnet and sets a startup script to install and start Apache and deploy static files.
+This is where resources are created:
+- Google Storage Bucket: Configured for hosting static content (HTML and images) with a specific CORS setting to allow web access and uniform bucket-level access for consistent permissions management.
+- IAM Binding: Ensures the bucket’s contents are publicly accessible by binding the “storage.objectViewer” role to all users.
+- Content Objects: HTML and image files are uploaded to the bucket. These objects are accessible via the bucket to serve as a static website.
+- VPC and Subnetwork: Defines a VPC and a subnetwork for deploying a virtual machine, used for backend services and tasks.
+- Virtual Machine: Configures a VM in the VPC/subnet to install and run a web server for a deployment.
+- Secrets Manager Data Source: Pulls data from GCP Secrets Manager integrating secrets for secure access.
 
 02-variables.tf
-- Purpose: Defines variables used throughout the Terraform configuration. These variables allow the configuration to be reusable and customizable for different environments or needs.
-- Variables: Include “project_id”, “bucket_name”, “region”, “zone”, and “machine_type”. These are used to parameterize the configuration so it can be adapted or scaled without modifying the core logic.
+Defines all the variables used.
 
 03-outputs.tf
-- Purpose: Defines output values that are displayed to the user upon successful deployment. These provide useful information for further configuration or verification of the deployed resources.
-- Outputs:
-- Public IP: Shows the external IP address of the created VM, useful for accessing or managing the VM post-deployment.
-- VPC and Subnet Names: Useful for referencing the network setup in additional configurations or scripts.
-- Internal IP: Provides the internal IP of the VM, relevant in network-related configurations.
-- Website URL: Outputs the URL where the static website is hosted, directly pointing to the “index.html” on GCS, providing immediate access to verify the website deployment.
-Interactions and Dependencies
-- The Google Compute Instance depends on the network and subnet to be correctly set up before it can be provisioned.
-- The static website and VM utilize outputs from network and storage configurations, linking these resources functionally.
-- IAM policies are directly tied to the bucket configuration, ensuring that the access permissions are aligned with the public accessibility needs of the website.
-- CORS settings in the GCS bucket ensure that web browsers can appropriately fetch resources from the bucket when served as part of the website.
+Specifies output variables requested. The fetched secret is crucial for security.
 
-This Terraform setup is a comprehensive example of how to deploy a mixed infrastructure on GCP, including networking, compute, and storage resources, making it an excellent basis for building and expanding complex environments. Each component is modular yet interconnected, allowing for extensive customization and scalability.
+secrets.js
+This is a Node.js script, not directly part of Terraform but related to managing secrets.
+-Purpose: Demonstrates how to programmatically access secrets from Google Cloud Secrets Manager using the Google Cloud Node.js client library.
+-Functionality: Connects to Secrets Manager, retrieves a secret, and logs its value. It’s an example of how application code might interact with secrets, separate from Terraform.
+
+How They Work Together
+- The configuration sets up the infrastructure with the static website and network components. It integrates Secrets Manager to securely fetch and use the secret in the infrastructure.
+- Node.js Script: Represents a separate application layer or operational script used for secret management or dynamic configuration during runtime.
+- Outputs from Terraform provide crucial URLs and IP addresses that might be used by other systems or reported back to end users for direct access.
+
+Features
+- Security: The Terraform setup ensures that the bucket contents are publicly readable, suitable for a static website. It also uses Google Cloud Secrets Manager for sensitive data.
+- Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
+- Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
+
 
 TASK3
 
@@ -126,30 +118,34 @@ Deliverables.
 2) Git Push of the solution to your GitHub.
 3) Screenshots showing how the HQ homepage was accessed from both the Americas and Asia Pacific. 
 
-
-“00-provider.tf”
-- Provider Configuration: Specifies that Google Cloud is the provider for the infrastructure resources. The “credentials” field refers to the JSON key file that contains your service account key, which Terraform will use to authenticate with Google Cloud.
-- Project and Region: Sets default values for the project and region, which apply to all resources unless explicitly overridden. This simplifies resource definitions by not needing to specify these values repeatedly.
-- Required Providers: This block specifies the version constraints for the Google Cloud provider, ensuring that Terraform uses an appropriate version of the provider that's compatible with your code.
-
-“01-main.tf”
-- Virtual Private Cloud (VPC) and Subnets:
-- European VPC: Defines a VPC in Europe without auto-created subnets, allowing for manual subnet management.
-- European Subnet: Specifies a subnet within the European VPC with a specific CIDR block and enables private Google access, which allows resources in the subnet to communicate with Google services without public IP addresses.
-- American VPCs: Similar to the European setup, two VPCs are defined for America, again without auto-created subnets.
-- American Subnets: Each American VPC has a dedicated subnet, defined with specific CIDR blocks.
-- Asia Pacific VPC and Subnet: Follows the same pattern as other regions, with a VPC and a specific subnet for the Asia Pacific region.
-
-“02-variables.tf”
-- Variables: Defines variables “project_id”, “european_region”, “american_region1”, “american_region2”, and “asia_pacific_region”. These allow for dynamic input, which are used across the configuration to specify the deployment settings like region-specific resources.
-
-“03-outputs.tf”
-- Outputs: Outputs are used to easily access important information about the resources once Terraform applies the configurations. For instance:
-- “european_vpc_id” and similar outputs for other regions provide the ID of the created VPCs, which can be useful for debugging, cross-referencing, or as inputs to other tools or scripts.
-- Subnet ranges like “european_subnet_range” provide CIDR blocks of each created subnet, useful for network planning and management.
-
-Interaction Among Blocks
-- Resource Definitions and Variable Usage: Each resource block in “01-main.tf” uses variables from “02-variables.tf” to specify configurations like region, which makes the code reusable and adaptable to different environments without changing the core logic.
-- Provider and Resource Dependency: The provider configuration in “00-provider.tf” must successfully authenticate and be configured correctly for the resources in “01-main.tf” to be provisioned in GCP.
-- Outputs and Resource Attributes: The outputs in “03-outputs.tf” extract attributes from the resources defined in “01-main.tf”, such as VPC and subnet IDs or CIDR ranges. These outputs can be critical for further automation or integration with other systems.
-This setup ensures a modular, understandable, and maintainable infrastructure-as-code environment where changes to the infrastructure can be managed with minimal adjustments to the code, primarily through the variables file or by updating resource definitions in “01-main.tf”. Each component plays a specific role and interacts with others through the use of shared variables and attributes, reflecting a well-structured Terraform project.
+Here's how each block works:
+00-providers.tf
+This sets up the providers needed:
+- Google Provider: Used to manage most GCP resources.
+- Google Beta Provider: Necessary for resources that require features available only in the Google provider's beta versions.
+01-main.tf
+This is where resources are created:
+- Virtual Private Cloud (VPC) Resources: It sets up VPCs in Europe, America, and Asia-Pacific with specific CIDR blocks. Each is set to a specific region without automatically creating subnetworks, allowing manual subnetwork setup for specific needs.
+- Subnetworks: A subnetwork is defined with a CIDR range and regional setup. This allows network management and segmentation.
+- Secret Management: Utilizes the secrets management to get secrets from GCP. This securely manages sensitive configurations.
+- VPN and Firewall: This secures connections and protections against unauthorized access.
+02-variables.tf
+- Variables like “project_id”, “region”, and regional identifiers are used in the “01-main.tf” without changing core logic.
+03-outputs.tf
+Provides outputs after Terraform execution:
+- Outputs like VPC IDs and subnet ranges are for understanding the deployed environment.
+- The “secret_value” output ensures the secret fetched can be used securely and is marked as sensitive to prevent it from being displayed.
+secrets.js
+This is a Node.js script, not directly part of Terraform but related to managing secrets.
+- Purpose: Demonstrates how to programmatically access secrets from Google Cloud Secrets Manager using the Google Cloud Node.js client library.
+- Functionality: Connects to Secrets Manager, retrieves a secret, and logs its value. It’s an example of how application code might interact with secrets, separate from Terraform.
+Interaction Among Files
+- “00-providers.tf” configures how Terraform interacts with GCP.
+- “01-main.tf” holds infrastructure components defined and managed.
+- “02-variables.tf” provides flexibility and customization to the configurations.
+- “03-outputs.tf” details insights and access points post-deployment.
+- “secrets.js” is a practical application outside of Terraform but within the setup designed by the configuration.
+Features
+- Security: The Terraform setup ensures that the bucket contents are publicly readable, suitable for a static website. It also uses Google Cloud Secrets Manager for sensitive data.
+- Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
+- Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
