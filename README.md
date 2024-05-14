@@ -1,7 +1,6 @@
 # theo-armageddon
 theo's armageddon (task1, task2, and task3) updated for security purposes
 
-TASK1
 
 Task 1
 
@@ -49,7 +48,6 @@ Features
 - Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
 - Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
 
-TASK2
 
 Task 2
 
@@ -100,8 +98,6 @@ Features
 - Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
 - Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
 
-
-TASK3
 
 Task 3
 
