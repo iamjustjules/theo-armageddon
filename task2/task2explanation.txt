@@ -1,0 +1,42 @@
+Task 2
+
+- Create a publicly accessible web page with Terraform.  You must complete the following
+    - Terraform Script with a VPC
+    - Terraform script must have a VM within your VPC.
+    - The VM must have the homepage on it.
+    - The VM must have an publicly accessible link to it.
+    - You must Git Push your script to your Github.
+    - Output file must show 1) Public IP, 2) VPC, 3) Subnet of the VM, 4) Internal IP of the VM.
+
+
+Here's how each block works:
+
+00-provider.tf
+- Purpose: Sets up the Google Cloud provider necessary for managing resources on Google Cloud Platform (GCP).
+- Details: It specifies the project ID, region, and credentials file that Terraform will use to authenticate and interact with GCP. It also ensures that a specific version of the Google provider is used, aligning with best practices for reliable and predictable deployments.
+
+01-main.tf
+- Google Storage Bucket: Configured to host a static website. “uniform_bucket_level_access” is enabled for simplified permission management, and a website configuration is provided to specify the main and error pages. CORS settings are configured to control cross-origin requests.
+- Public IAM Binding: Grants public read access to all objects in the specified bucket, making it usable as a public static website.
+- Storage Bucket Objects: Uploads “index.html” and images (“Jandk.png”, “JandN.jpg”) to the bucket, setting the correct content type for web hosting.
+- Google Compute Network and Subnet: Creates a VPC (“just_jules_vpc”) without auto-creating subnetworks, and a subnet within this VPC with a specified CIDR block.
+- Google Compute Instance: Sets up a virtual machine within the created subnet, using a predefined machine type and image. It configures a network interface connected to the subnet and sets a startup script to install and start Apache and deploy static files.
+
+02-variables.tf
+- Purpose: Defines variables used throughout the Terraform configuration. These variables allow the configuration to be reusable and customizable for different environments or needs.
+- Variables: Include “project_id”, “bucket_name”, “region”, “zone”, and “machine_type”. These are used to parameterize the configuration so it can be adapted or scaled without modifying the core logic.
+
+03-outputs.tf
+- Purpose: Defines output values that are displayed to the user upon successful deployment. These provide useful information for further configuration or verification of the deployed resources.
+- Outputs:
+- Public IP: Shows the external IP address of the created VM, useful for accessing or managing the VM post-deployment.
+- VPC and Subnet Names: Useful for referencing the network setup in additional configurations or scripts.
+- Internal IP: Provides the internal IP of the VM, relevant in network-related configurations.
+- Website URL: Outputs the URL where the static website is hosted, directly pointing to the “index.html” on GCS, providing immediate access to verify the website deployment.
+Interactions and Dependencies
+- The Google Compute Instance depends on the network and subnet to be correctly set up before it can be provisioned.
+- The static website and VM utilize outputs from network and storage configurations, linking these resources functionally.
+- IAM policies are directly tied to the bucket configuration, ensuring that the access permissions are aligned with the public accessibility needs of the website.
+- CORS settings in the GCS bucket ensure that web browsers can appropriately fetch resources from the bucket when served as part of the website.
+
+This Terraform setup is a comprehensive example of how to deploy a mixed infrastructure on GCP, including networking, compute, and storage resources, making it an excellent basis for building and expanding complex environments. Each component is modular yet interconnected, allowing for extensive customization and scalability.

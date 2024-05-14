@@ -1,0 +1,60 @@
+Task 1
+
+- Create a publicly accessible bucket in GCP with Terraform.  You must complete the following tasks.
+    - Terraform script
+    - Git Push the script to your Github
+    - Output file must show the public link
+    - Must have an index.html file within
+
+Create a terraform providers.tf, main.tf, variables.tf, and outputs.tf with a publicly accessible bucket in GCP with an "index.html" file, "Jandk.png" file, and "JandN.jpg" file uploaded to the bucket in us-central1 and have the output show the public URL for index.html file that also displays the parameters of the bucket
+
+Here's an explanation of each block in the Terraform script:
+
+Resource Block: “google_storage_bucket” "public_bucket"
+Description:
+- This block creates a Google Cloud Storage bucket with specified attributes.
+- “name”: Uses the variable “var.bucket_name” to set the bucket's name.
+- “location”: Sets the bucket's location using “var.region”.
+- “storage_class”: Sets the storage class to "STANDARD", which is a cost-effective storage option for data accessed less frequently.
+- “uniform_bucket_level_access”: Enables uniform bucket-level access, simplifying permission management by removing object-level ACLs.
+- “website”: Configures the bucket as a static website. “main_page_suffix” specifies the main page (index.html) and “not_found_page” specifies the error page (404.html) for requests to non-existing pages.
+- “cors”: Sets Cross-Origin Resource Sharing (CORS) rules allowing all domains (“*”) to perform “GET” and “HEAD” requests.
+Relation to Other Blocks:
+- It serves as the foundation for the “google_storage_bucket_iam_binding” and “google_storage_bucket_object” resources, providing the bucket context in which they operate.
+
+Resource Block: “google_storage_bucket_iam_binding” "public_read"
+Description:
+- This block assigns the IAM role of “objectViewer” to “allUsers”, making the bucket's contents publicly readable.
+- “bucket”: Specifies the bucket name using “google_storage_bucket.public_bucket.name”, linking it to the previously defined bucket resource.
+- “role”: Assigns the “storage.objectViewer” role, which allows users to view objects stored in the bucket.
+- “members”: Specifies “allUsers”, indicating that anyone on the internet can access the objects.
+
+Relation to Other Blocks:
+- It directly modifies the IAM policy of the “google_storage_bucket.public_bucket” to allow public access, crucial for serving the static website content globally.
+
+Resource Block: “google_storage_bucket_object” "index"
+Description:
+- Creates an object “index.html” within the bucket.
+- “name”: Sets the object's name to "index.html".
+- “bucket”: Links to the “google_storage_bucket.public_bucket” to define where the object should reside.
+- “content”: Defines the HTML content of the webpage.
+- “content_type”: Specifies the MIME type as “text/html”.
+Relation to Other Blocks:
+- It adds content to the bucket configured for static website hosting. This object is what will be served as the main page due to the website configuration in the bucket resource.
+
+Variable Blocks: “project_id”, “region”, “bucket_name”
+Description:
+- These blocks define variables that are used throughout the Terraform configuration.
+- “project_id”: Specifies the Google Cloud project ID.
+- “region”: Specifies the region where resources will be created.
+- “bucket_name”: Specifies the name of the bucket to be created.
+Relation to Other Blocks:
+- These variables are used to configure properties in the “google_storage_bucket” resource and can be referenced throughout the configuration to ensure consistency and reusability of values.
+
+Output Block: “bucket_url”
+Description:
+- This block generates an output that displays the URL of the publicly accessible bucket.
+- “value”: Constructs the URL using the bucket's name.
+Relation to Other Blocks:
+- Provides a user-friendly way to access the URL of the bucket created and configured by the earlier resource blocks, making it easy to verify and access the deployed resources.
+Each block plays a distinct role in configuring the storage, accessibility, and interactivity of resources in your Google Cloud project. Together, they form a comprehensive Terraform configuration for deploying a static website hosted on a Google Cloud Storage bucket.
