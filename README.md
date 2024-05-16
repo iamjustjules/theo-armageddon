@@ -1,7 +1,6 @@
 # theo-armageddon
 theo's armageddon (task1, task2, and task3) updated for security purposes
 
-TASK1
 
 Task 1
 
@@ -49,7 +48,6 @@ Features
 - Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
 - Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
 
-TASK2
 
 Task 2
 
@@ -101,8 +99,6 @@ Features
 - Separation: This manages infrastructure, while the Node.js script manages runtime secret fetching for a separation between infrastructure provisioning and application runtime management.
 
 
-TASK3
-
 Task 3
 
 You must complete the following scenerio.
@@ -119,32 +115,39 @@ Deliverables.
 3) Screenshots showing how the HQ homepage was accessed from both the Americas and Asia Pacific. 
 
 Here's how each block works:
+
 00-providers.tf
 This sets up the providers needed:
 - Google Provider: Used to manage most GCP resources.
 - Google Beta Provider: Necessary for resources that require features available only in the Google provider's beta versions.
+
 01-main.tf
 This is where resources are created:
 - Virtual Private Cloud (VPC) Resources: It sets up VPCs in Europe, America, and Asia-Pacific with specific CIDR blocks. Each is set to a specific region without automatically creating subnetworks, allowing manual subnetwork setup for specific needs.
 - Subnetworks: A subnetwork is defined with a CIDR range and regional setup. This allows network management and segmentation.
 - Secret Management: Utilizes the secrets management to get secrets from GCP. This securely manages sensitive configurations.
 - VPN and Firewall: This secures connections and protections against unauthorized access.
+
 02-variables.tf
 - Variables like “project_id”, “region”, and regional identifiers are used in the “01-main.tf” without changing core logic.
+
 03-outputs.tf
 Provides outputs after Terraform execution:
 - Outputs like VPC IDs and subnet ranges are for understanding the deployed environment.
 - The “secret_value” output ensures the secret fetched can be used securely and is marked as sensitive to prevent it from being displayed.
+
 secrets.js
 This is a Node.js script, not directly part of Terraform but related to managing secrets.
 - Purpose: Demonstrates how to programmatically access secrets from Google Cloud Secrets Manager using the Google Cloud Node.js client library.
 - Functionality: Connects to Secrets Manager, retrieves a secret, and logs its value. It’s an example of how application code might interact with secrets, separate from Terraform.
+
 Interaction Among Files
 - “00-providers.tf” configures how Terraform interacts with GCP.
 - “01-main.tf” holds infrastructure components defined and managed.
 - “02-variables.tf” provides flexibility and customization to the configurations.
 - “03-outputs.tf” details insights and access points post-deployment.
 - “secrets.js” is a practical application outside of Terraform but within the setup designed by the configuration.
+
 Features
 - Security: The Terraform setup ensures that the bucket contents are publicly readable, suitable for a static website. It also uses Google Cloud Secrets Manager for sensitive data.
 - Modularity: The use of variables and outputs makes the configuration modular and reusable, allowing parameters to be changed easily without altering the main configuration.
