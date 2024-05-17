@@ -10,3 +10,8 @@
 
 # Ignore executable files
 *.exe
+*.tfstate
+*.tfstate.backup
+*.tfvars
+secrets/
+*.json
