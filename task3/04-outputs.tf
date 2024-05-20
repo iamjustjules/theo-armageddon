@@ -34,8 +34,8 @@ output "european_instance_environment" {
   description = "Environment metadata for the European compute instance."
 }
 
-
 output "european_instance_webpage_url" {
-  value       = "http://${google_compute_instance.european_instance.network_interface.0.access_config.0.nat_ip}" 
+  value       = "http://${google_compute_instance.european_instance.network_interface.0.access_config.0.nat_ip}/index.html"
   description = "URL to access the hosted index.html on the European compute instance."
 }
+

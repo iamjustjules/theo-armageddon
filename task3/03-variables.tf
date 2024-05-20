@@ -20,12 +20,12 @@ variable "european_region" {
   description = "value of the european region"
 }
 
-variable "american_region1" {
+variable "american1_region" {
   default     = "us-west1"
   description = "value of the american region1"
 }
 
-variable "american_region2" {
+variable "american2_region" {
   default     = "us-east1"
   description = "value of the american region2"
 }

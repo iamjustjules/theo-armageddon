@@ -38,6 +38,12 @@ resource "google_compute_instance" "european_instance" {
   }
 
   metadata_startup_script = file("${path.module}/startup-script.sh")
+/*
+metadata = {
+    startup_script = "\n<html>\n    <head>\n        <title>Hello, Class 5.5</title>\n    </head>\n    <body>\n        <h1>It ends in death, but the journey is worth the work</h1>\n        <p>It ends in death, but the journey is worth the work. People need people - even in the times we least expect it...</p>\n    </body>\n\n    <img src=\"JandK.png\" width=500/>\n    <img src=\"JandN.jpg\" width=500/>\n</html>\n\n"
+  }
+*/
+
 }
 
 # Firewall rules to allow only internal traffic on port 80
@@ -48,7 +54,8 @@ resource "google_compute_firewall" "internal_http" {
     protocol = "tcp"
     ports    = ["80"]
   }
-  source_ranges = ["172.16.0.0/12", "192.168.0.0/16"]
+  source_ranges = ["172.16.0.0/12", "192.168.0.0/16","10.150.0.0/16"]
+  target_tags = ["european-headquarters"]
 }
 
 resource "google_compute_vpn_gateway" "european_vpn_gateway" {
@@ -62,3 +69,10 @@ resource "google_compute_address" "european_vpn_gateway_ip" {
   region = var.european_region
 }
 
+resource "google_compute_forwarding_rule" "european_esp" {
+  name        = "european-esp"
+  region      = var.european_region
+  ip_protocol = "ESP"
+  ip_address  = google_compute_address.european_vpn_gateway_ip.address
+  target      = google_compute_vpn_gateway.european_vpn_gateway.self_link
+}
